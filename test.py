@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Denoise CT Reconstructions')
 parser.add_argument('-b', action='store', dest='batch_size', default=128, type=int, help='Size of a batch')
 parser.add_argument('-s', action='store', dest='size', default=128, type=int, help='Width and height of image')
 parser.add_argument('-n', action='store', dest='noise_factor', default=0.2, type=float, help='Float between 0 and 1')
-parser.add_argument('-e', action='store', dest='nb_epochs', default=100, type=float, help='Number of epochs')
+parser.add_argument('-e', action='store', dest='nb_epochs', default=100, type=int, help='Number of epochs')
 
 args = parser.parse_args()
 batch_size = args.batch_size
