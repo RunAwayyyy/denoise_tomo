@@ -1,15 +1,10 @@
-import dicom
-import glob
-import os
-import sys
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.misc import imresize
+from keras.preprocessing.image import ImageDataGenerator
 
 from models import ImageSuperResolutionModel
 from data_loader import load
-
 
 import argparse
 
@@ -32,8 +27,18 @@ load_weights = args.load_weights
 
 x_train_noisy, x_test_noisy, y_train, y_test = load(size, noise_factor)
 
-"""n = 10
-plt.figure(figsize=(20, 2))
+datagen = ImageDataGenerator(featurewise_center=True,
+                             featurewise_std_normalization=True,
+                             rotation_range=20,
+                             width_shift_range=0.2,
+                             height_shift_range=0.2,
+                             horizontal_flip=True,
+                             vertical_flip=True)
+
+datagen.fit(x_train_noisy)
+
+n = 5
+plt.figure()
 indices = np.random.randint(0, len(x_test_noisy), size=n)
 for i, ind in enumerate(indices):
     ax = plt.subplot(1, n, i+1)
@@ -41,19 +46,19 @@ for i, ind in enumerate(indices):
     plt.gray()
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-plt.show()"""
+plt.show()
 
 autoencoder = ImageSuperResolutionModel()
 autoencoder.create_model(height=size, width=size, channels=1, load_weights=load_weights)
 
 autoencoder.model.summary()
 
-autoencoder.fit(x_train_noisy, y_train, batch_size=batch_size, nb_epochs=nb_epochs, save_history=True)
+autoencoder.fit(datagen, x_train_noisy, y_train, batch_size=batch_size, nb_epochs=nb_epochs, save_history=True)
 
 decoded_imgs = autoencoder.predict(y_test, batch_size=batch_size)
 
-n = 10
-plt.figure(figsize=(20, 4))
+n = 5
+plt.figure()
 indices = np.random.randint(0, len(x_test_noisy), size=n)
 for i, ind in enumerate(indices):
     # display original
