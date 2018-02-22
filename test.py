@@ -18,12 +18,14 @@ parser.add_argument('-b', action='store', dest='batch_size', default=128, type=i
 parser.add_argument('-s', action='store', dest='size', default=128, type=int, help='Width and height of image')
 parser.add_argument('-n', action='store', dest='noise_factor', default=0.2, type=float, help='Float between 0 and 1')
 parser.add_argument('-e', action='store', dest='nb_epochs', default=100, type=int, help='Number of epochs')
+parser.add_argument('-w', action='store', dest='load_weights', default=False, type=bool, help='Load weights for model')
 
 args = parser.parse_args()
 batch_size = args.batch_size
 size = args.size
 noise_factor = args.noise_factor
 nb_epochs = args.nb_epochs
+load_weights = args.load_weights
 
 
 def load_data():
@@ -79,7 +81,7 @@ for i, ind in enumerate(indices):
 plt.show()"""
 
 autoencoder = ImageSuperResolutionModel()
-autoencoder.create_model(height=size, width=size, channels=1)
+autoencoder.create_model(height=size, width=size, channels=1, load_weights=load_weights)
 
 autoencoder.model.summary()
 
