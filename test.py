@@ -18,7 +18,9 @@ parser.add_argument('-b', action='store', dest='batch_size', default=128, type=i
 parser.add_argument('-s', action='store', dest='size', default=128, type=int, help='Width and height of image')
 parser.add_argument('-n', action='store', dest='noise_factor', default=0.2, type=float, help='Float between 0 and 1')
 parser.add_argument('-e', action='store', dest='nb_epochs', default=100, type=int, help='Number of epochs')
-parser.add_argument('-w', action='store', dest='load_weights', default=False, type=bool, help='Load weights for model')
+parser.add_argument('--load-weights', dest='load_weights', action='store_true')
+parser.add_argument('--no-load-weights', dest='load_weights', action='store_false')
+parser.set_defaults(feature=True)
 
 args = parser.parse_args()
 batch_size = args.batch_size
