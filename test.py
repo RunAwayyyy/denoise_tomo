@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 
-from models import ImageSuperResolutionModel
+from models import ImageSuperResolutionModel, DeConvolv
 from data_loader import load
 
 import argparse
@@ -48,7 +48,7 @@ for i, ind in enumerate(indices):
     ax.get_yaxis().set_visible(False)
 plt.show()"""
 
-autoencoder = ImageSuperResolutionModel()
+autoencoder = DeConvolv()
 autoencoder.create_model(height=size, width=size, channels=1, load_weights=load_weights)
 
 autoencoder.model.summary()

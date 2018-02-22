@@ -1,9 +1,8 @@
 import numpy as np
 from keras.models import Model
-from keras.layers import Concatenate, Add, Average, Input, Dense, Flatten, BatchNormalization, Activation, LeakyReLU
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D, Convolution2DTranspose
+from keras.layers import Input, BatchNormalization, Activation
+from keras.layers.convolutional import Conv2D
 from keras import backend as K
-from keras.utils.np_utils import to_categorical
 import keras.callbacks as callbacks
 import keras.optimizers as optimizers
 from keras.callbacks import ModelCheckpoint
@@ -46,14 +45,76 @@ class ImageSuperResolutionModel:
         """
         shape = (width, height, channels)
         init = Input(shape=shape)
-        x = Convolution2D(self.n1, (self.f1, self.f1), activation='relu', padding='same', name='level1')(init)
-        x = Convolution2D(self.n2, (self.f2, self.f2), activation='relu', padding='same', name='level2')(x)
+        x = Conv2D(self.n1, (self.f1, self.f1), activation='relu', padding='same', name='level1')(init)
+        x = Conv2D(self.n2, (self.f2, self.f2), activation='relu', padding='same', name='level2')(x)
 
-        out = Convolution2D(channels, (self.f3, self.f3), padding='same', name='output')(x)
+        out = Conv2D(channels, (self.f3, self.f3), padding='same', name='output')(x)
 
         model = Model(init, out)
 
         adam = optimizers.Adam(lr=1e-3)
+        model.compile(optimizer=adam, loss='mse', metrics=[PSNRLoss])
+        if load_weights: model.load_weights(self.weight_path)
+        self.model = model
+
+    def fit(self, generator, x_train, y_train, batch_size=128, nb_epochs=100, save_history=True, history_fn="Model_History.txt"):
+        """
+        Standard method to train any of the models.
+        """
+        callback_list = [callbacks.ModelCheckpoint(self.weight_path, monitor='val_PSNRLoss', save_best_only=True,
+                                                   mode='max', save_weights_only=True, verbose=2)]
+        if save_history:
+            callback_list.append(HistoryCheckpoint(history_fn))
+
+            if K.backend() == 'tensorflow':
+                log_dir = './%s_logs/' % self.model_name
+                tensorboard = TensorBoardBatch(log_dir, batch_size=batch_size)
+                callback_list.append(tensorboard)
+
+        print("Training model : %s" % (self.__class__.__name__))
+        self.model.fit_generator(generator.flow(x_train, y_train, batch_size=batch_size),
+                                 steps_per_epoch=len(x_train) // batch_size,
+                                 epochs=nb_epochs, callbacks=callback_list)
+
+    def predict(self, x_test, batch_size=128):
+        return self.model.predict(x_test, batch_size=batch_size)
+
+
+class DeConvolv:
+    def __init__(self):
+        self.weight_path = "deblur_cnn_weights.h5.h5"
+        self.model_name = "ImageSuperResolutionModel"
+
+    def __conv_batch(self, input, filter, kernel):
+        x = Conv2D(filters=filter, kernel_size=kernel, strides=1, padding='same')(input)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        return x
+
+    def create_model(self, height=32, width=32, channels=3, load_weights=False):
+        input = Input(shape=(height, width, channels))
+
+        # HIDDEN LAYERS
+        x = self.__conv_batch(input, filter=128, kernel=10)
+        x = self.__conv_batch(x, filter=320, kernel=1)
+        x = self.__conv_batch(x, filter=320, kernel=1)
+        x = self.__conv_batch(x, filter=320, kernel=1)
+        x = self.__conv_batch(x, filter=128, kernel=1)
+        x = self.__conv_batch(x, filter=128, kernel=3)
+        x = self.__conv_batch(x, filter=512, kernel=1)
+        x = self.__conv_batch(x, filter=128, kernel=5)
+        x = self.__conv_batch(x, filter=128, kernel=5)
+        x = self.__conv_batch(x, filter=128, kernel=3)
+        x = self.__conv_batch(x, filter=128, kernel=5)
+        x = self.__conv_batch(x, filter=128, kernel=5)
+        x = self.__conv_batch(x, filter=256, kernel=1)
+        x = self.__conv_batch(x, filter=64, kernel=7)
+
+        x = Conv2D(filters=channels                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     , kernel_size=7, strides=1, padding='same', activation='relu')(x)
+
+        adam = optimizers.Adam(lr=1e-3)
+        model = Model(inputs=input, outputs=x)
         model.compile(optimizer=adam, loss='mse', metrics=[PSNRLoss])
         if load_weights: model.load_weights(self.weight_path)
         self.model = model
