@@ -5,10 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from scipy.misc import imresize
-from keras.models import Model
-from keras.layers import Conv2D, MaxPooling2D, Input, UpSampling2D
 
-#dir =  glob.iglob('src/**/*.c', recursive=True)
+# Keras imports
+from keras.models import Model
+from keras import backend as K
+
 
 def load_data():
     dataset = sorted(glob.glob("./data/CPTAC-CM/DOI/C3L-00629/**/*.dcm", recursive=True))
@@ -21,12 +22,13 @@ def load_data():
         # if shape == (512, 512):
         array = np.zeros(shape, dtype=ds.pixel_array.dtype)
         array[:, :] = ds.pixel_array / 255.
-        x_data.append(imresize(array, (64, 64, 1)))
+        x_data.append(imresize(array, (128, 128, 1)))
     return x_data
 
-if os.path.exists("./data/CPTAC-CM/data.npy"):
+if False and os.path.exists("./data/CPTAC-CM/data.npy"):
     x_data = np.load("./data/CPTAC-CM/data.npy")
 else:
+    print("Load data")
     x_data = load_data()
 
     np.save("./data/CPTAC-CM/data.npy", x_data)
