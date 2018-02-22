@@ -37,7 +37,7 @@ datagen = ImageDataGenerator(featurewise_center=True,
 
 datagen.fit(x_train_noisy)
 
-n = 5
+"""n = 5
 plt.figure()
 indices = np.random.randint(0, len(x_test_noisy), size=n)
 for i, ind in enumerate(indices):
@@ -46,7 +46,7 @@ for i, ind in enumerate(indices):
     plt.gray()
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-plt.show()
+plt.show()"""
 
 autoencoder = ImageSuperResolutionModel()
 autoencoder.create_model(height=size, width=size, channels=1, load_weights=load_weights)

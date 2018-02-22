@@ -58,13 +58,10 @@ class ImageSuperResolutionModel:
         if load_weights: model.load_weights(self.weight_path)
         self.model = model
 
-    def fit(self, x_train, y_train, batch_size=128, nb_epochs=100, save_history=True, history_fn="Model_History.txt"):
+    def fit(self, generator, x_train, y_train, batch_size=128, nb_epochs=100, save_history=True, history_fn="Model_History.txt"):
         """
         Standard method to train any of the models.
         """
-
-        if self.model == None: self.create_model(batch_size=batch_size)
-
         callback_list = [callbacks.ModelCheckpoint(self.weight_path, monitor='val_PSNRLoss', save_best_only=True,
                                                    mode='max', save_weights_only=True, verbose=2)]
         if save_history:
@@ -76,7 +73,9 @@ class ImageSuperResolutionModel:
                 callback_list.append(tensorboard)
 
         print("Training model : %s" % (self.__class__.__name__))
-        self.model.fit(x_train, y_train, batch_size=batch_size, epochs=nb_epochs, callbacks=callback_list, validation_split=0.25)
+        self.model.fit_generator(generator.flow(x_train, y_train, batch_size=batch_size),
+                                 steps_per_epoch=len(x_train) // batch_size,
+                                 epochs=nb_epochs, callbacks=callback_list)
 
     def predict(self, x_test, batch_size=128):
         return self.model.predict(x_test, batch_size=batch_size)
